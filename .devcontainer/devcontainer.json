@@ -1,0 +1,16 @@
+{
+    "name": "laravel-vite-docker",
+    "dockerComposeFile": ["../docker-compose.yml"],
+    "service": "backend",
+    "workspaceFolder": "/var/www",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "bmewburn.vscode-intelephense-client",
+                "xdebug.php-pack",
+                "esbenp.prettier-vscode"
+            ]
+        }
+    },
+    "postCreateCommand": "echo 'DevContainer ready'"
+}

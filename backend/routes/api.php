@@ -1,0 +1,14 @@
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+
+Route::prefix('v1')->group(function () {
+    Route::get('/ping', function () {
+        return response()->json([
+            'ok' => true,
+            'message' => 'pong',
+            'ts' => now()->toIso8601String(),
+        ]);
+    });
+});
