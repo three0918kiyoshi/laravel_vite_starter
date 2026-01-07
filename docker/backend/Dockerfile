@@ -13,4 +13,9 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY ./docker/backend/php.ini /usr/local/etc/php/php.ini
 
 WORKDIR /var/www/backend
+
+COPY docker/backend/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["php-fpm"]
