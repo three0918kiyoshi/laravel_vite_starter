@@ -21,6 +21,7 @@ services:
             - ./backend:/var/www/backend:delegated
             - backend_vendor:/var/www/backend/vendor
             - backend_storage:/var/www/backend/storage
+            - backend_bootstrap_cache:/var/www/backend/bootstrap/cache
         depends_on:
             - db
 
@@ -55,4 +56,5 @@ volumes:
     db-data:
     backend_vendor:
     backend_storage:
+    backend_bootstrap_cache:
     frontend_node_modules:
