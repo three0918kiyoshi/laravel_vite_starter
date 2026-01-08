@@ -3,14 +3,21 @@
     "dockerComposeFile": ["../docker-compose.yml"],
     "service": "backend",
     "workspaceFolder": "/var/www",
+    "runServices": ["backend", "frontend", "nginx", "db"],
+    "shutdownAction": "stopCompose",
+    "overrideCommand": false,
+
     "customizations": {
         "vscode": {
             "extensions": [
                 "bmewburn.vscode-intelephense-client",
                 "xdebug.php-pack",
-                "esbenp.prettier-vscode"
+                "esbenp.prettier-vscode",
+                "dbaeumer.vscode-eslint",
+                "vue.volar"
             ]
         }
     },
-    "postCreateCommand": "echo 'DevContainer ready'"
+
+    "postCreateCommand": "echo 'DevContainer ready' && (cd /var/www/frontend && npm ci || true) && (cd /var/www/backend && composer install || true)"
 }
