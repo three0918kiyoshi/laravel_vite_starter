@@ -1,9 +1,18 @@
 # Page snapshot
 
 ```yaml
-- generic [active] [ref=e1]:
-  - heading "400 Bad Request" [level=1] [ref=e3]
-  - generic [ref=e4]: Request Header Or Cookie Too Large
-  - separator [ref=e5]
-  - generic [ref=e6]: nginx/1.27.5
+- generic [ref=e3]:
+  - heading "Login" [level=1] [ref=e4]
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - text: Email
+      - textbox "Email" [ref=e7]: test1@example.com
+    - generic [ref=e8]:
+      - text: Password
+      - textbox "Password" [ref=e9]: Password123!
+    - button "Login" [ref=e10] [cursor=pointer]
+  - paragraph [ref=e11]:
+    - text: New here?
+    - link "Create an account" [ref=e12] [cursor=pointer]:
+      - /url: /signup
 ```

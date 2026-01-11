@@ -56,6 +56,7 @@ services:
 
     e2e:
         image: mcr.microsoft.com/playwright:v1.57.0-jammy
+        container_name: app-e2e
         working_dir: /work
         volumes:
             - ./frontend:/work
