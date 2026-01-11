@@ -25,7 +25,7 @@ Laravel 12 / React 19 / MySQL / Vite / nginx / Docker で開発を進めるた�
 
 ```bash
 git clone <repository-url>
-cd laravel_vite_starter
+cd Laravel_React_Vite_starter
 ```
 
 ### 2. `.env` を作成
