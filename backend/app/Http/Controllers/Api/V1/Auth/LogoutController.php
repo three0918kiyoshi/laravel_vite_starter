@@ -36,6 +36,8 @@ class LogoutController extends Controller
         $response->withCookie(
             cookie()->forget('XSRF-TOKEN', $sessionPath, $sessionDomain)
         );
+        $response->withCookie(cookie()->forget($sessionCookie));
+        $response->withCookie(cookie()->forget('XSRF-TOKEN'));
 
         return $response;
     }
