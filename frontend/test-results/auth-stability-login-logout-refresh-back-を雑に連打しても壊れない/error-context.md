@@ -1,10 +1,9 @@
 # Page snapshot
 
 ```yaml
-- generic [ref=e3]:
-  - heading "Protected /app" [level=1] [ref=e4]
-  - paragraph [ref=e5]: "Logged in as: Test User (test1@example.com)"
-  - generic [ref=e6]:
-    - button "Refresh (me)" [ref=e7] [cursor=pointer]
-    - button "Logout" [ref=e8] [cursor=pointer]
+- generic [active] [ref=e1]:
+  - heading "400 Bad Request" [level=1] [ref=e3]
+  - generic [ref=e4]: Request Header Or Cookie Too Large
+  - separator [ref=e5]
+  - generic [ref=e6]: nginx/1.27.5
 ```
