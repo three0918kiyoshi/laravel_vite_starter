@@ -55,7 +55,7 @@ services:
             - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
 
     e2e:
-        image: mcr.microsoft.com/playwright:latest
+        image: mcr.microsoft.com/playwright:v1.57.0-jammy
         working_dir: /work
         volumes:
             - ./frontend:/work
