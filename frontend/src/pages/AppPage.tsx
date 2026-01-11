@@ -18,6 +18,7 @@ export default function AppPage() {
             <div style={{ display: "flex", gap: 8 }}>
                 <button onClick={refresh}>Refresh (me)</button>
                 <button
+                    data-testid="logout-button"
                     onClick={async () => {
                         await signOut();
                         navigate("/login", { replace: true });

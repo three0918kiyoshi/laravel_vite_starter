@@ -1,124 +1,92 @@
+import { apiFetch, ApiError } from "../lib/api";
+
 export type User = {
     id: number;
     name: string;
     email: string;
 };
 
-export type MeResponse = { ok: boolean; user: User };
+let csrfPromise: Promise<void> | null = null;
 
-function getCookie(name: string) {
-    const m = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
-    return m ? decodeURIComponent(m[2]) : "";
+async function csrf(): Promise<void> {
+    // Sanctum Cookie認証でPOSTを安定させるため、毎回csrf-cookieを取りに行く（安定優先）
+    if (!csrfPromise) {
+        csrfPromise = apiFetch("/sanctum/csrf-cookie", { method: "GET" }).catch(
+            (e) => {
+                // 失敗したら次回リトライできるように戻す
+                csrfPromise = null;
+                throw e;
+            }
+        );
+    }
+    await csrfPromise;
 }
 
-/** CSRF cookie を取得（Sanctum SPAの必須ステップ） */
-export async function csrf(): Promise<void> {
-    await fetch("/sanctum/csrf-cookie", { credentials: "include" });
+// 419 が出たら 1 回だけ csrf を取り直して再実行する
+async function withCsrfRetry<T>(fn: () => Promise<T>): Promise<T> {
+    try {
+        await csrf();
+        return await fn();
+    } catch (e: any) {
+        if (e instanceof ApiError && e.status === 419) {
+            csrfPromise = null;
+            await csrf();
+            return await fn();
+        }
+        throw e;
+    }
 }
 
 /** ログイン */
 export async function login(email: string, password: string): Promise<User> {
-    await csrf();
-    const xsrf = getCookie("XSRF-TOKEN");
-
-    const res = await fetch("/api/v1/auth/login", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "X-Requested-With": "XMLHttpRequest",
-            "X-XSRF-TOKEN": xsrf,
-        },
-        body: JSON.stringify({ email, password }),
-    });
-
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) {
-        throw new Error(
-            `login failed: HTTP ${res.status} ${JSON.stringify(json)}`
+    return withCsrfRetry(async () => {
+        const res = await apiFetch<{ ok: boolean; user: User }>(
+            "/api/v1/auth/login",
+            {
+                method: "POST",
+                json: { email, password },
+            }
         );
-    }
-
-    // { ok: true, user: ... } を想定
-    return json.user as User;
+        return res.user;
+    });
 }
 
-/** ログアウト */
-export async function logout(): Promise<void> {
-    await csrf();
-    const xsrf = getCookie("XSRF-TOKEN");
-
-    const res = await fetch("/api/v1/auth/logout", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-            Accept: "application/json",
-            "X-Requested-With": "XMLHttpRequest",
-            "X-XSRF-TOKEN": xsrf,
-        },
-    });
-
-    if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
-        throw new Error(
-            `logout failed: HTTP ${res.status} ${JSON.stringify(json)}`
-        );
-    }
-}
-
-/** 自分情報取得（未ログインなら null を返す） */
-export async function me(): Promise<User | null> {
-    const res = await fetch("/api/v1/me", {
-        method: "GET",
-        credentials: "include",
-        headers: {
-            Accept: "application/json",
-            "X-Requested-With": "XMLHttpRequest",
-        },
-    });
-
-    if (res.status === 401) return null;
-
-    const json = (await res.json().catch(() => ({}))) as Partial<MeResponse>;
-    if (!res.ok) {
-        throw new Error(
-            `me failed: HTTP ${res.status} ${JSON.stringify(json)}`
-        );
-    }
-
-    return (json.user ?? null) as User | null;
-}
-
+/** サインアップ */
 export async function signup(
     name: string,
     email: string,
     password: string
 ): Promise<User> {
-    // いったんユーザー作成（ここは現状のサインアップAPIを使う）
-    const res = await fetch("/api/v1/auth/signup", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "X-Requested-With": "XMLHttpRequest",
-        },
-        body: JSON.stringify({
-            name,
-            email,
-            password,
-            password_confirmation: password,
-        }),
-    });
-
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) {
-        throw new Error(
-            `signup failed: HTTP ${res.status} ${JSON.stringify(json)}`
+    return withCsrfRetry(async () => {
+        const res = await apiFetch<{ ok: boolean; user: User }>(
+            "/api/v1/auth/signup",
+            {
+                method: "POST",
+                json: { name, email, password },
+            }
         );
-    }
+        return res.user;
+    });
+}
 
-    // signup後は自動ログイン（Cookie認証なので login を呼ぶのが一番確実）
-    return await login(email, password);
+/** ログアウト */
+export async function logout(): Promise<void> {
+    await withCsrfRetry(async () => {
+        await apiFetch("/api/v1/auth/logout", { method: "POST" });
+    });
+}
+
+/** 自分情報（未ログインは null） */
+export async function me(): Promise<User | null> {
+    try {
+        const res = await apiFetch<{ ok: boolean; user: User }>("/api/v1/me", {
+            method: "GET",
+            headers: { Accept: "application/json" },
+        });
+        return res.user;
+    } catch (e: any) {
+        // 未ログインは null 扱い
+        if (e?.status === 401) return null;
+        throw e;
+    }
 }

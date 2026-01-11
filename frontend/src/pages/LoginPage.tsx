@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { useLocation, useNavigate, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 
 export default function LoginPage() {
     const { status, error, signIn } = useAuth();
+
     const [email, setEmail] = useState("test1@example.com");
     const [password, setPassword] = useState("Password123!");
     const [busy, setBusy] = useState(false);
@@ -12,8 +13,15 @@ export default function LoginPage() {
     const location = useLocation() as any;
     const from = location?.state?.from || "/app";
 
+    useEffect(() => {
+        if (status === "authenticated") {
+            navigate("/app", { replace: true });
+        }
+    }, [status, navigate]);
+
     const submit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (busy) return; // 二重送信ガード
         setBusy(true);
         try {
             const ok = await signIn(email, password);
@@ -22,11 +30,6 @@ export default function LoginPage() {
             setBusy(false);
         }
     };
-
-    if (status === "authenticated") {
-        // すでにログイン済みなら保護ページへ
-        navigate("/app", { replace: true });
-    }
 
     return (
         <div style={{ padding: 24, maxWidth: 520 }}>
@@ -38,6 +41,7 @@ export default function LoginPage() {
                 <label>
                     Email
                     <input
+                        data-testid="login-email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         style={{ width: "100%" }}
@@ -47,6 +51,7 @@ export default function LoginPage() {
                 <label>
                     Password
                     <input
+                        data-testid="login-password"
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -54,7 +59,11 @@ export default function LoginPage() {
                     />
                 </label>
 
-                <button type="submit" disabled={busy}>
+                <button
+                    data-testid="login-submit"
+                    type="submit"
+                    disabled={busy}
+                >
                     {busy ? "Logging in..." : "Login"}
                 </button>
             </form>

@@ -52,6 +52,17 @@ services:
             - db-data:/var/lib/mysql
             - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
 
+    e2e:
+        image: mcr.microsoft.com/playwright:latest
+        working_dir: /work
+        volumes:
+            - ./frontend:/work
+        depends_on:
+            - nginx
+            - backend
+            - frontend
+        command: sh -lc "npm ci && npx playwright install --with-deps && npm run e2e"
+
 volumes:
     db-data:
     backend_vendor:

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import * as api from "./auth";
 import type { User } from "./auth";
 
@@ -9,23 +9,36 @@ export function useAuth() {
     const [user, setUser] = useState<User | null>(null);
     const [error, setError] = useState<string>("");
 
-    const refresh = useCallback(async () => {
-        setError("");
-        setStatus("loading");
-        try {
-            const u = await api.me();
-            if (u) {
-                setUser(u);
-                setStatus("authenticated");
-            } else {
+    // ★ refreshの多重実行を潰す（pageshow/visibilitychange等で連打されても1回にする）
+    const refreshPromiseRef = useRef<Promise<void> | null>(null);
+
+    const refresh = useCallback((): Promise<void> => {
+        if (refreshPromiseRef.current) return refreshPromiseRef.current;
+
+        refreshPromiseRef.current = (async () => {
+            setError("");
+            setStatus("loading");
+
+            try {
+                const u = await api.me();
+                if (u) {
+                    setUser(u);
+                    setStatus("authenticated");
+                } else {
+                    setUser(null);
+                    setStatus("unauthenticated");
+                }
+            } catch (e: any) {
+                // ここでthrowするとアプリ全体が落ちがちなので、未ログインに倒して終わる
                 setUser(null);
                 setStatus("unauthenticated");
+                setError(e instanceof Error ? e.message : "unknown error");
+            } finally {
+                refreshPromiseRef.current = null;
             }
-        } catch (e) {
-            setUser(null);
-            setStatus("unauthenticated");
-            setError(e instanceof Error ? e.message : "unknown error");
-        }
+        })();
+
+        return refreshPromiseRef.current;
     }, []);
 
     const signIn = useCallback(async (email: string, password: string) => {
@@ -65,13 +78,15 @@ export function useAuth() {
         setError("");
         try {
             await api.logout();
+        } catch (e) {
+            // サーバ側logoutが失敗しても、ローカル状態は未ログインに倒す（挫折防止）
         } finally {
-            // logout が失敗しても、ローカル状態は未ログインに倒す（挫折防止）
             setUser(null);
             setStatus("unauthenticated");
         }
     }, []);
 
+    // 初回ロードで一回だけ me を確認
     useEffect(() => {
         refresh();
     }, [refresh]);
