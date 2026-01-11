@@ -59,11 +59,12 @@ services:
         working_dir: /work
         volumes:
             - ./frontend:/work
+            - frontend_node_modules:/work/node_modules
         depends_on:
             - nginx
             - backend
             - frontend
-        command: sh -lc "npm ci && npx playwright install --with-deps && npm run e2e"
+        command: sh -lc "if [ ! -d node_modules ]; then npm ci; fi && npm run e2e"
 
 volumes:
     db-data:
