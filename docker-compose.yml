@@ -17,6 +17,8 @@ services:
             dockerfile: ./docker/backend/Dockerfile
         container_name: app-backend
         working_dir: /var/www/backend
+        environment:
+            SESSION_LIFETIME: 720
         volumes:
             - ./:/var/www:delegated
             - backend_vendor:/var/www/backend/vendor
