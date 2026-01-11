@@ -22,6 +22,20 @@ class LogoutController extends Controller
         $response = response()->json(['ok' => true]);
 
         $sessionCookie = config('session.cookie');
+        $sessionPath = config('session.path', '/');
+        $sessionDomain = config('session.domain');
+
+        $response->withCookie(
+            cookie()->forget($sessionCookie, $sessionPath, $sessionDomain)
+        );
+        if ($sessionCookie !== 'laravel_session') {
+            $response->withCookie(
+                cookie()->forget('laravel_session', $sessionPath, $sessionDomain)
+            );
+        }
+        $response->withCookie(
+            cookie()->forget('XSRF-TOKEN', $sessionPath, $sessionDomain)
+        );
         $response->withCookie(cookie()->forget($sessionCookie));
         $response->withCookie(cookie()->forget('XSRF-TOKEN'));
 
