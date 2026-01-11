@@ -80,7 +80,14 @@ test("login/logout/refresh/back を雑に連打しても壊れない", async ({
     const logout = page.getByTestId("logout-button");
     await expect(logout).toBeVisible({ timeout: 20_000 });
 
-    await Promise.all([logout.click(), logout.click()]);
+    const logoutResponse = page.waitForResponse(
+        (res) =>
+            res.url().includes("/api/v1/auth/logout") &&
+            res.request().method() === "POST" &&
+            res.ok()
+    );
+    await Promise.all([logoutResponse, logout.click(), logout.click()]);
+    await page.waitForURL(/\/login/, { timeout: 20_000 });
 
     // 7) /app に行くと弾かれて /login に戻る想定
     await page.goto("/app", { waitUntil: "domcontentloaded" });
