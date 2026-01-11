@@ -19,6 +19,12 @@ class LogoutController extends Controller
             $request->session()->regenerateToken();
         }
 
-        return response()->json(['ok' => true])->withCookie(cookie()->forget('laravel_session'));
+        $response = response()->json(['ok' => true]);
+
+        $sessionCookie = config('session.cookie');
+        $response->withCookie(cookie()->forget($sessionCookie));
+        $response->withCookie(cookie()->forget('XSRF-TOKEN'));
+
+        return $response;
     }
 }
