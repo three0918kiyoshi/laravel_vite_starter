@@ -22,12 +22,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (!document.hidden) safeRefresh();
         };
 
+        const intervalId = window.setInterval(() => {
+            if (!document.hidden) safeRefresh();
+        }, 5 * 60 * 1000);
+
         window.addEventListener("pageshow", onPageShow);
         document.addEventListener("visibilitychange", onVisibility);
 
         return () => {
             window.removeEventListener("pageshow", onPageShow);
             document.removeEventListener("visibilitychange", onVisibility);
+            window.clearInterval(intervalId);
         };
     }, [auth]);
 
