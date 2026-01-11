@@ -10,14 +10,14 @@ export default function LoginPage() {
     const [busy, setBusy] = useState(false);
 
     const navigate = useNavigate();
-    const location = useLocation() as any;
-    const from = location?.state?.from || "/app";
+    const location = useLocation() as { state?: { from?: string } };
+    const from = location.state?.from || "/app";
 
     useEffect(() => {
-        if (status === "authenticated") {
-            navigate("/app", { replace: true });
+        if (status === "authenticated" && location.state?.from) {
+            navigate(from, { replace: true });
         }
-    }, [status, navigate]);
+    }, [from, location.state?.from, navigate, status]);
 
     const submit = async (e: React.FormEvent) => {
         e.preventDefault();
