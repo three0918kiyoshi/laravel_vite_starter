@@ -11,13 +11,13 @@ let csrfPromise: Promise<void> | null = null;
 async function csrf(): Promise<void> {
     // Sanctum Cookie認証でPOSTを安定させるため、毎回csrf-cookieを取りに行く（安定優先）
     if (!csrfPromise) {
-        csrfPromise = apiFetch("/sanctum/csrf-cookie", { method: "GET" }).catch(
-            (e) => {
-                // 失敗したら次回リトライできるように戻す
-                csrfPromise = null;
-                throw e;
-            }
-        );
+        csrfPromise = apiFetch<void>("/sanctum/csrf-cookie", {
+            method: "GET",
+        }).catch((e) => {
+            // 失敗したら次回リトライできるように戻す
+            csrfPromise = null;
+            throw e;
+        });
     }
     await csrfPromise;
 }
